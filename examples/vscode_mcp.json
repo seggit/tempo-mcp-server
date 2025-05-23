@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "tempo": {
+      "command": "python",
+      "args": ["/absolute/path/to/tempo-mcp-server/src/tempo_mcp_server/server.py"],
+      "env": {
+        "TEMPO_API_TOKEN": "your_tempo_api_token_here",
+        "TEMPO_DEBUG": "false"
+      }
+    }
+  }
+}
