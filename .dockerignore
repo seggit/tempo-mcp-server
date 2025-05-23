@@ -1,0 +1,98 @@
+# Ignore version control
+.git
+.gitignore
+
+# Ignore Docker files during build (except Dockerfile)
+docker-compose*.yml
+.dockerignore
+
+# Ignore Python cache and environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore logs and temporary files
+*.log
+logs/
+.tempo_cache/
+*.tmp
+*.temp
+
+# Ignore test and coverage files
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+htmlcov/
+.tox/
+.nox/
+
+# Ignore documentation build
+docs/_build/
+.readthedocs.yml
+
+# Ignore development and test requirements
+requirements-dev.txt
+tests/
+
+# Ignore setup and development scripts
+setup.sh
+*.md
+LICENSE
+
+# Ignore example configurations (they're for reference)
+examples/
+
+# Keep only essential files for the container
+!src/
+!requirements.txt
+!pyproject.toml
+!README.md
+!LICENSE
