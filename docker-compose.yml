@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  tempo-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: tempo-mcp-server
+    restart: unless-stopped
+    environment:
+      - TEMPO_API_TOKEN=${TEMPO_API_TOKEN}
+      - TEMPO_BASE_URL=${TEMPO_BASE_URL:-https://api.tempo.io/4}
+      - TEMPO_DEBUG=${TEMPO_DEBUG:-false}
+    volumes:
+      # Mount logs directory for debugging
+      - ./logs:/home/mcpuser/logs
+      # Mount .env file if it exists
+      - ./.env:/app/.env:ro
+    # For stdio MCP communication, we use interactive mode
+    stdin_open: true
+    tty: true
+    # Uncomment below for HTTP transport mode
+    # ports:
+    #   - "8000:8000"
+    networks:
+      - tempo-mcp
+    healthcheck:
+      test: ["CMD", "python", "-c", "import tempo_mcp_server; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Development container with volume mounts
+  tempo-mcp-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: tempo-mcp-dev
+    restart: "no"
+    environment:
+      - TEMPO_API_TOKEN=${TEMPO_API_TOKEN}
+      - TEMPO_BASE_URL=${TEMPO_BASE_URL:-https://api.tempo.io/4}
+      - TEMPO_DEBUG=${TEMPO_DEBUG:-true}
+    volumes:
+      # Mount source code for development
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./logs:/home/mcpuser/logs
+      - ./.env:/app/.env:ro
+    stdin_open: true
+    tty: true
+    networks:
+      - tempo-mcp
+    command: ["python", "-m", "tempo_mcp_server"]
+    profiles:
+      - dev
+
+  # Optional: Test runner
+  tempo-mcp-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: tempo-mcp-test
+    restart: "no"
+    environment:
+      - TEMPO_API_TOKEN=${TEMPO_API_TOKEN}
+      - TEMPO_DEBUG=true
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./requirements-dev.txt:/app/requirements-dev.txt
+    networks:
+      - tempo-mcp
+    command: ["sh", "-c", "pip install -r requirements-dev.txt && pytest tests/ -v"]
+    profiles:
+      - test
+
+networks:
+  tempo-mcp:
+    driver: bridge
+
+# Optional: Volume for persistent data
+volumes:
+  tempo-logs:
+    driver: local
