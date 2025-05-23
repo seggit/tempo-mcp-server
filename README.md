@@ -25,10 +25,48 @@ A Model Context Protocol (MCP) server that provides seamless integration with Te
 
 1. **Tempo Cloud instance** with API access
 2. **Tempo API Token** - Generate from Tempo Settings → API Integration
-3. **Python 3.8+** 
+3. **Docker** (for containerized setup) OR **Python 3.8+** (for local setup)
 4. **MCP-compatible client** (Claude Desktop, VS Code with MCP extension, etc.)
 
-## 🛠️ Installation
+## 🐳 Installation (Docker - Recommended)
+
+### Quick Docker Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/seggit/tempo-mcp-server.git
+cd tempo-mcp-server
+
+# Run the automated Docker setup
+chmod +x docker-setup.sh
+./docker-setup.sh
+```
+
+This script will:
+- ✅ Check Docker installation
+- ✅ Build the Docker image
+- ✅ Set up environment configuration
+- ✅ Test the container
+- ✅ Generate MCP client configurations
+
+### Manual Docker Setup
+
+```bash
+# Build the Docker image
+docker build -t tempo-mcp-server .
+
+# Create environment file
+cp .env.example .env
+# Edit .env and add your TEMPO_API_TOKEN
+
+# Test the server
+./docker-wrapper.sh --test
+
+# Use with Docker Compose
+docker compose up tempo-mcp-server
+```
+
+## 🛠️ Installation (Local Python)
 
 ### Option 1: Quick Start with UV (Recommended)
 
@@ -79,9 +117,25 @@ TEMPO_BASE_URL=https://api.tempo.io/4
 
 ### 3. MCP Client Configuration
 
-#### For Claude Desktop
+#### For Claude Desktop (Docker)
 
 Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "tempo": {
+      "command": "/absolute/path/to/tempo-mcp-server/docker-wrapper.sh",
+      "args": ["--mcp"],
+      "env": {
+        "TEMPO_API_TOKEN": "your_tempo_api_token_here"
+      }
+    }
+  }
+}
+```
+
+#### For Claude Desktop (Local Python)
 
 ```json
 {
@@ -97,9 +151,26 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-#### For VS Code with MCP Extension
+#### For VS Code with MCP Extension (Docker)
 
 Add to your `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "tempo": {
+      "command": "/absolute/path/to/tempo-mcp-server/docker-wrapper.sh",
+      "args": ["--mcp"],
+      "env": {
+        "TEMPO_API_TOKEN": "your_tempo_api_token_here",
+        "TEMPO_DEBUG": "false"
+      }
+    }
+  }
+}
+```
+
+#### For VS Code with MCP Extension (Local Python)
 
 ```json
 {
@@ -108,7 +179,8 @@ Add to your `.vscode/mcp.json`:
       "command": "python",
       "args": ["/path/to/tempo-mcp-server/src/tempo_mcp_server/server.py"],
       "env": {
-        "TEMPO_API_TOKEN": "your_tempo_api_token_here"
+        "TEMPO_API_TOKEN": "your_tempo_api_token_here",
+        "TEMPO_DEBUG": "false"
       }
     }
   }
@@ -148,6 +220,59 @@ Create a worklog for 3.5 hours on issue PROJ-456 starting at 9:00 AM today with:
 - Work category: External
 ```
 
+## 🐳 Docker Commands
+
+### Basic Docker Usage
+
+```bash
+# Build image
+docker build -t tempo-mcp-server .
+
+# Run server (interactive)
+./docker-wrapper.sh
+
+# Run with debug logging
+./docker-wrapper.sh --test
+
+# Force rebuild image
+./docker-wrapper.sh --build
+
+# Get help
+./docker-wrapper.sh --help
+```
+
+### Docker Compose Usage
+
+```bash
+# Start production server
+docker compose up tempo-mcp-server
+
+# Start development server (with volume mounts)
+docker compose --profile dev up tempo-mcp-dev
+
+# Run tests in container
+docker compose --profile test up tempo-mcp-test
+
+# Run in background
+docker compose up -d tempo-mcp-server
+```
+
+### Container Management
+
+```bash
+# View logs
+docker logs tempo-mcp-server
+
+# Access container shell
+docker exec -it tempo-mcp-server bash
+
+# Stop all containers
+docker compose down
+
+# Clean up everything
+docker compose down -v --rmi all
+```
+
 ## 🔧 Development
 
 ### Running Tests
@@ -156,8 +281,11 @@ Create a worklog for 3.5 hours on issue PROJ-456 starting at 9:00 AM today with:
 # Install test dependencies
 pip install -e ".[test]"
 
-# Run tests
+# Run tests (local)
 pytest tests/
+
+# Run tests (Docker)
+docker compose --profile test up tempo-mcp-test
 
 # Run with coverage
 pytest --cov=src/tempo_mcp_server tests/
@@ -169,8 +297,11 @@ pytest --cov=src/tempo_mcp_server tests/
 # Install MCP Inspector
 npm install -g @modelcontextprotocol/inspector
 
-# Run the inspector
+# Run the inspector (local)
 mcp-inspector python src/tempo_mcp_server/server.py
+
+# Run the inspector (Docker)
+mcp-inspector ./docker-wrapper.sh
 ```
 
 ### Rate Limiting
@@ -213,17 +344,37 @@ Tempo API has a rate limit of **5 requests per second**. The server automaticall
    - For bulk operations, consider using smaller batch sizes
 
 3. **MCP connection issues:**
-   - Verify Python path in MCP configuration
+   - Verify Python path in MCP configuration (local) or Docker wrapper path (Docker)
    - Check environment variables are set
    - Review server logs for detailed errors
 
+4. **Docker issues:**
+   - Ensure Docker is running: `docker info`
+   - Check image exists: `docker images | grep tempo-mcp-server`
+   - Rebuild if needed: `./docker-wrapper.sh --build`
+   - View logs: `docker logs tempo-mcp-server`
+
 ### Debug Mode
 
-Run with debug logging:
-
+**Local Python:**
 ```bash
 TEMPO_DEBUG=true python src/tempo_mcp_server/server.py
 ```
+
+**Docker:**
+```bash
+./docker-wrapper.sh --test
+# or
+docker compose --profile dev up tempo-mcp-dev
+```
+
+### Deployment Options
+
+| Method | Best For | Pros | Cons |
+|--------|----------|------|------|
+| **Docker** | Production, easy setup | Isolated, consistent, easy deployment | Requires Docker |
+| **Local Python** | Development, lightweight | Direct control, easier debugging | Environment setup required |
+| **Docker Compose** | Development, multi-service | Easy orchestration, volume mounts | More complex setup |
 
 ## 🤝 Contributing
 
