@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "tempo": {
+      "command": "/absolute/path/to/tempo-mcp-server/docker-wrapper.sh",
+      "args": ["--mcp"],
+      "env": {
+        "TEMPO_API_TOKEN": "your_tempo_api_token_here",
+        "TEMPO_DEBUG": "false"
+      }
+    }
+  }
+}
